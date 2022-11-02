@@ -1,0 +1,180 @@
+<html>
+    <iframe src="{{sound}}" allow="autoplay" style="display:none" id="iframeAudio">
+    </iframe> 
+    <body>
+        <div>
+            <button onclick="playAudio()">Play</button>
+        <h2>Press P to start listening</h2>
+             <button id="record">Buzz In!</button>
+            <p id="sus">{{points}}</p>
+            <div id="parent">
+            </div>
+        </div>
+        <p>{{prevans}}</p>
+        <div style='visibility: hidden' id="previous_answer">
+            
+            <button onclick="onOveride()" id="over">Overide</button>
+        </div>
+        <div style='visibility: hidden' id="you_heard">
+            <p>The computer heard "{{hidden1}}"</p>
+
+        </div>
+    <p style='visibility: hidden' id="counter">{{counter}}</p>
+    </body>
+
+<head>
+<script>
+var isScriptOn = false
+navigator.mediaDevices.getUserMedia({audio:true})
+      .then(stream => {handlerFunction(stream)})
+            function handlerFunction(stream) {
+            rec = new MediaRecorder(stream);
+            rec.ondataavailable = e => {
+              audioChunks.push(e.data);
+              if (rec.state == "inactive"){
+                let blob = new Blob(audioChunks,{type:'audio/wav;codecs=0'});
+                var data = new FormData()
+                data.append('file', blob, 'file')
+                sendData(data)
+                setTimeout(() => {
+                    location.reload()
+                }, (2000));
+              }
+            }
+          }
+        offset=0
+          p = document.getElementById('sus')
+        p.innerHTML = Number("{{points}}") + Number("{{offset}}")
+
+        //make an onOveride function that increases the value inside p by one then locks the button
+        function onOveride() {
+            offset = offset + 1
+            p.innerHTML = Number("{{points}}") + Number("{{offset}}") + offset
+            document.getElementById("over").disabled = true;
+            //send a post request to /override with the value of offest
+            var data = new FormData()
+            data.append('offset', p.innerHTML)
+            fetch('/override', {
+                method: 'POST',
+                body: data
+            })
+        }
+
+
+          var sound2 = "{{sound}}"
+
+        var source = '{{content}}'
+
+        function sendData(data){
+            fetch('/test', {
+                method:'POST',
+                body: data
+            })
+        }
+           adio =  document.createElement('audio')
+           answer =  document.createElement('audio')
+           document.getElementById('parent').append(answer)
+           document.getElementById('parent').append(adio)
+
+           /*window.onload = function() {
+            if ("{{hidden1}}" != ''){
+                document.getElementById('you_heard').style.visibility = 'visible'
+            }
+            counter = document.getElementById('counter').innerHTML;
+            if (counter != 0){
+                document.getElementById('previous_answer').style.visibility = 'visible'
+            }
+        }*/
+
+        answer.setAttribute('src',sound2)
+
+        adio.setAttribute("src",source)
+        adio.autoplay = false;
+          record = document.getElementById('record')
+          
+          window.onkeypress = function(event) {
+             if (event.keyCode == 32) {
+                if (!isScriptOn){
+                    adio.pause()
+                    isScriptOn = true;
+                    console.log('I was clicked')
+                    record.disabled = true;
+                    record.style.backgroundColor = "blue"
+                    audioChunks = [];
+                    rec.start();
+                    x = setTimeout(stop,4000)
+                }
+            }
+            if (event.keyCode == 112){
+                adio.play()
+            }
+        }
+        function reload(){
+            location.reload()
+        }
+        record.onclick = e => {
+            if (!isScriptOn){
+                    adio.pause()
+                    isScriptOn = true;
+                    console.log('I was clicked')
+                    record.disabled = true;
+                    record.style.backgroundColor = "blue"
+                    audioChunks = [];
+                    rec.start();
+                    x = setTimeout(stop,4000)
+                }
+        }
+        stop = function(){
+          console.log("I was clicked")
+          record.disabled = false;
+          stop.disabled=true;
+          record.style.backgroundColor = "red"
+          rec.stop();
+          isScriptOn = false;
+        }
+        function playAudio() { 
+            adio.play(); 
+        }
+
+</script>
+
+<style>
+    #sus {
+        position: absolute;
+        top: 0%; 
+        left: 50%;
+        font-size: 15em;
+        transform: translate(-50%, -50%);
+        text-align: center
+    }
+    #record {
+        position: absolute;
+        top: 60%;
+        left: 50%; 
+      transform: translate(-50%, -50%);
+      font-size: 2em;
+      border-radius: 20%;
+
+}
+
+button {
+    left: 50%;
+}
+
+p{
+    position: absolute;
+    text-align: center;
+  font-size: 1em;
+  border-radius: 20%;
+}
+
+h2 {
+    text-align: center;
+    font-size: 3em;
+    }
+body {
+    background-color:aqua
+}
+</style>
+</head>
+</html>
